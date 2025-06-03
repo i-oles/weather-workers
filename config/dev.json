@@ -1,0 +1,13 @@
+{
+  "SourceFileName": "pl172.json",
+  "FilesDirName": "assets",
+  "ApiUrl": "https://api.open-meteo.com/v1/forecast",
+  "LogProducedMsg": true,
+  "LogConsumedMsg": true,
+  "LogResults": true,
+  "AnalysisDurationInMonths": 6,
+  "Stage": "stage5",
+  "ConsumerNumber": 5,
+  "ProducerNumber": 50,
+  "MaxWorkingProducers": 5
+}
