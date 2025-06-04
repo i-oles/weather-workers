@@ -27,8 +27,11 @@ func (p Producer) Produce(cityInfo weatherapp.ShortCityInfo) (weatherapp.Weather
 	}
 
 	msg, err := p.producer.Produce(cityInfo)
+	if err != nil {
+		return weatherapp.WeatherMsg{}, fmt.Errorf("error while producing weather msg: %w", err)
+	}
 
 	p.semaphore.Release(1)
 
-	return msg, fmt.Errorf("error while producing weather msg: %w", err)
+	return msg, nil
 }

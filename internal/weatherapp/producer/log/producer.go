@@ -20,8 +20,11 @@ func New(producer weatherAppProducer.Producer) *Producer {
 
 func (p Producer) Produce(cityInfo weatherapp.ShortCityInfo) (weatherapp.WeatherMsg, error) {
 	msg, err := p.producer.Produce(cityInfo)
+	if err != nil {
+		return weatherapp.WeatherMsg{}, fmt.Errorf("failed to produce weather msg: %w", err)
+	}
 
 	logrus.Infof("Produced msg for city: %v", msg.CityName)
 
-	return msg, fmt.Errorf("error while producing weather msg: %w", err)
+	return msg, nil
 }

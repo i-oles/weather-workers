@@ -51,13 +51,13 @@ func (c *Creator) buildFileName() string {
 	if c.cfg.PerformanceTest {
 		return fmt.Sprintf("%s_%s_%dtimes%s",
 			testingFilePrefix,
-			c.cfg.Stage,
-			c.cfg.StageRepeatCount,
+			c.cfg.Mode,
+			c.cfg.ExecutionRepeatCount,
 			csvExtension,
 		)
 	}
 
-	return fmt.Sprintf("%s_%s%s", resultFilePrefix, c.cfg.Stage, jsonExtension)
+	return fmt.Sprintf("%s_%s%s", resultFilePrefix, c.cfg.Mode, jsonExtension)
 }
 
 func (c *Creator) validateIfFileExists(filePath string) error {

@@ -6,8 +6,8 @@
   "LogConsumedMsg": true,
   "LogResults": true,
   "AnalysisDurationInMonths": 6,
-  "Stage": "stage5",
+  "Mode": "mode_5",
   "ConsumerNumber": 5,
-  "ProducerNumber": 50,
+  "ProducerNumber": 5,
   "MaxWorkingProducers": 5
 }

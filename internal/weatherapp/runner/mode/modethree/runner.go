@@ -1,4 +1,4 @@
-package stagefour
+package modethree
 
 import (
 	"sync"
@@ -7,18 +7,17 @@ import (
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
 	channelConsumer "main.go/internal/weatherapp/runner/consumer/channel"
-	msgProducer "main.go/internal/weatherapp/runner/producer/msg/fromchannel"
-	"main.go/internal/weatherapp/runner/stage"
+	"main.go/internal/weatherapp/runner/mode"
+	
 )
 
-var _ stage.Runner = (*Runner)(nil)
+var _ mode.Runner = (*Runner)(nil)
 
 type Runner struct {
 	producer        weatherAppProducer.Producer
 	consumer        weatherAppConsumer.Consumer
 	shortCitiesInfo []weatherapp.ShortCityInfo
 	consumerNumber  int
-	producerNumber  int
 }
 
 func NewRunner(
@@ -26,54 +25,33 @@ func NewRunner(
 	consumer weatherAppConsumer.Consumer,
 	shortCitiesInfo []weatherapp.ShortCityInfo,
 	consumerNumber int,
-	producerNumber int,
 ) *Runner {
 	return &Runner{
 		producer:        producer,
 		consumer:        consumer,
 		shortCitiesInfo: shortCitiesInfo,
 		consumerNumber:  consumerNumber,
-		producerNumber:  producerNumber,
 	}
 }
 
 func (r *Runner) Run() error {
-	var consumerWg sync.WaitGroup
-
-	var producerWg sync.WaitGroup
+	var wg sync.WaitGroup
 
 	msgChannel := make(chan weatherapp.WeatherMsg)
-	shortCityInfoChannel := make(chan weatherapp.ShortCityInfo)
 
-	producerRunner := msgProducer.NewRunner(
-		r.producer, shortCityInfoChannel, msgChannel,
-	)
-
+	producerRunner := msgProducer.NewRunner(r.producer, msgChannel)
 	consumerRunner := channelConsumer.NewRunner(r.consumer, msgChannel)
 
-	go func() {
-		for _, cityInfo := range r.shortCitiesInfo {
-			shortCityInfoChannel <- cityInfo
-		}
-
-		close(shortCityInfoChannel)
-	}()
-
-	consumerWg.Add(r.consumerNumber)
+	wg.Add(r.consumerNumber)
 
 	for i := 0; i < r.consumerNumber; i++ {
-		go consumerRunner.Consume(&consumerWg)
+		go consumerRunner.Consume(&wg)
 	}
 
-	producerWg.Add(r.producerNumber)
+	wg.Add(1)
 
-	for i := 0; i < r.producerNumber; i++ {
-		go producerRunner.Produce(&producerWg)
-	}
-
-	producerWg.Wait()
-	close(msgChannel)
-	consumerWg.Wait()
+	go producerRunner.Produce(&wg, r.shortCitiesInfo)
+	wg.Wait()
 
 	return nil
 }

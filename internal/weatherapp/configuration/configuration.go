@@ -9,9 +9,9 @@ type Configuration struct {
 	LogConsumedMsg           bool
 	LogResults               bool
 	AnalysisDurationInMonths int
-	Stage                    string
+	Mode                     string
 	MockAPI                  bool
-	StageRepeatCount         int
+	ExecutionRepeatCount     int
 	PerformanceTest          bool
 	FilesDirName             string
 	ConsumerNumber           int

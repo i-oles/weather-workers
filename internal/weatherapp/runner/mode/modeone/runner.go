@@ -1,14 +1,14 @@
-package stageone
+package modeone
 
 import (
 	"github.com/sirupsen/logrus"
 	"main.go/internal/weatherapp"
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
-	"main.go/internal/weatherapp/runner/stage"
+	"main.go/internal/weatherapp/runner/mode"
 )
 
-var _ stage.Runner = (*Runner)(nil)
+var _ mode.Runner = (*Runner)(nil)
 
 type Runner struct {
 	producer        weatherAppProducer.Producer

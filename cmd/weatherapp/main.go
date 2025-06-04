@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sync/semaphore"
 	"main.go/internal/weatherapp"
 	"main.go/internal/weatherapp/aggregator/weather"
-	"main.go/internal/weatherapp/benchmark/stage"
+	"main.go/internal/weatherapp/benchmark/execution"
 	"main.go/internal/weatherapp/configuration"
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	logConsumer "main.go/internal/weatherapp/consumer/log"
@@ -30,11 +30,11 @@ import (
 	memoryProducer "main.go/internal/weatherapp/producer/memory"
 	"main.go/internal/weatherapp/producer/semaphoredecorator"
 	fileReader "main.go/internal/weatherapp/reader/file"
-	stageRunner "main.go/internal/weatherapp/runner/stage"
-	"main.go/internal/weatherapp/runner/stage/stagefour"
-	"main.go/internal/weatherapp/runner/stage/stageone"
-	"main.go/internal/weatherapp/runner/stage/stagethree"
-	"main.go/internal/weatherapp/runner/stage/stagetwo"
+	modeRunner "main.go/internal/weatherapp/runner/mode"
+	modeFour "main.go/internal/weatherapp/runner/mode/modefour"
+	modeOne "main.go/internal/weatherapp/runner/mode/modeone"
+	modeThree "main.go/internal/weatherapp/runner/mode/modethree"
+	modeTwo "main.go/internal/weatherapp/runner/mode/modetwo"
 	"main.go/internal/weatherapp/saver/memory"
 	"main.go/internal/weatherapp/writer"
 	"main.go/internal/weatherapp/writer/benchmark"
@@ -66,11 +66,6 @@ func main() {
 
 	producer = memoryProducer.New(apiOpenMeteo)
 
-	if cfg.Stage == "stage5" {
-		semaphore := semaphore.NewWeighted(int64(cfg.MaxWorkingProducers))
-		producer = semaphoredecorator.New(producer, semaphore)
-	}
-
 	if cfg.LogProducedMsg {
 		producer = logProducer.New(producer)
 	}
@@ -82,7 +77,7 @@ func main() {
 		&foggyhours.PreSaver{},
 	}
 
-	if cfg.Stage != "stage1" && cfg.Stage != "stage2" {
+	if cfg.Mode != "mode_1" && cfg.Mode != "mode_2" {
 		preSavers = []presaver.WeatherAppPreSaver{
 			mutexdecorator.New(&avgtemp.PreSaver{}),
 			mutexdecorator.New(&sunnyhours.PreSaver{}),
@@ -123,13 +118,13 @@ func main() {
 
 	defer resultsFile.Close()
 
-	switch cfg.Stage {
-	case "stage1":
-		runner := stageone.NewRunner(producer, consumer, shortCitiesInfo)
+	switch cfg.Mode {
+	case "mode_1":
+		runner := modeOne.NewRunner(producer, consumer, shortCitiesInfo)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Stage, cfg.StageRepeatCount)
+			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Stage, err)
+				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
 			return
@@ -137,14 +132,14 @@ func main() {
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running stage1: %v", err)
+			logrus.Fatalf("error during running %s: %v", cfg.Mode, err)
 		}
-	case "stage2":
-		runner := stagetwo.NewRunner(producer, consumer, shortCitiesInfo)
+	case "mode_2":
+		runner := modeTwo.NewRunner(producer, consumer, shortCitiesInfo)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Stage, cfg.StageRepeatCount)
+			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Stage, err)
+				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
 			return
@@ -152,14 +147,14 @@ func main() {
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running stage2: %v", err)
+			logrus.Fatalf("error during running %s: %v", cfg.Mode, err)
 		}
-	case "stage3":
-		runner := stagethree.NewRunner(producer, consumer, shortCitiesInfo, cfg.ConsumerNumber)
+	case "mode_3":
+		runner := modeThree.NewRunner(producer, consumer, shortCitiesInfo, cfg.ConsumerNumber)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Stage, cfg.StageRepeatCount)
+			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Stage, err)
+				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
 			return
@@ -167,10 +162,15 @@ func main() {
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running stage3: %v", err)
+			logrus.Fatalf("error during running %s: %v", cfg.Mode, err)
 		}
-	case "stage4", "stage5":
-		runner := stagefour.NewRunner(
+	case "mode_4", "mode_5":
+		if cfg.Mode == "mode_5" {
+			sem := semaphore.NewWeighted(int64(cfg.MaxWorkingProducers))
+			producer = semaphoredecorator.New(producer, sem)
+		}
+
+		runner := modeFour.NewRunner(
 			producer,
 			consumer,
 			shortCitiesInfo,
@@ -178,9 +178,9 @@ func main() {
 			cfg.ProducerNumber,
 		)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Stage, cfg.StageRepeatCount)
+			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Stage, err)
+				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
 			return
@@ -188,12 +188,10 @@ func main() {
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running %v: %v", cfg.Stage, err)
+			logrus.Fatalf("error during running %v: %v", cfg.Mode, err)
 		}
-	case "stage6":
-
 	default:
-		logrus.Fatalf("Unknown stage: %v", cfg.Stage)
+		logrus.Fatalf("Unknown execution: %v", cfg.Mode)
 	}
 
 	results := saver.GetResults()
@@ -214,17 +212,17 @@ func main() {
 }
 
 func processPerformanceTests(
-	runner stageRunner.Runner,
+	runner modeRunner.Runner,
 	file *os.File,
-	stageName string,
-	stageRepeatCount int,
+	mode string,
+	executionRepeatCount int,
 ) error {
-	stageDurationWriter := benchmark.NewWriter(file)
-	stageBenchmark := stage.NewBenchmark(stageName, stageDurationWriter)
+	modeDurationWriter := benchmark.NewWriter(file)
+	modeBenchmark := execution.NewBenchmark(mode, modeDurationWriter)
 
-	err := stageBenchmark.ProcessPerformanceStagesTest(runner, stageRepeatCount)
+	err := modeBenchmark.ProcessExecutionPerformanceTest(runner, executionRepeatCount)
 	if err != nil {
-		return fmt.Errorf("error during performance tests for %s: %w", stageName, err)
+		return fmt.Errorf("error during execution performance tests for %s: %w", mode, err)
 	}
 
 	return nil

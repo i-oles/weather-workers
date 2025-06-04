@@ -9,5 +9,5 @@ type WeatherAppResultWriter interface {
 }
 
 type PerformanceTestWriter interface {
-	Write(stageDuration string) error
+	Write(executionDuration string) error
 }

@@ -1,4 +1,4 @@
-package stagetwo
+package modetwo
 
 import (
 	"sync"
@@ -7,11 +7,11 @@ import (
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
 	channelConsumer "main.go/internal/weatherapp/runner/consumer/channel"
-	msgProducer "main.go/internal/weatherapp/runner/producer/msg/fromarray"
-	"main.go/internal/weatherapp/runner/stage"
+	"main.go/internal/weatherapp/runner/mode"
+	
 )
 
-var _ stage.Runner = (*Runner)(nil)
+var _ mode.Runner = (*Runner)(nil)
 
 type Runner struct {
 	producer        weatherAppProducer.Producer

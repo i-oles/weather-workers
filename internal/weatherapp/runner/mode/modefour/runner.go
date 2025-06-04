@@ -1,4 +1,4 @@
-package stagethree
+package modefour
 
 import (
 	"sync"
@@ -7,17 +7,18 @@ import (
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
 	channelConsumer "main.go/internal/weatherapp/runner/consumer/channel"
-	msgProducer "main.go/internal/weatherapp/runner/producer/msg/fromarray"
-	"main.go/internal/weatherapp/runner/stage"
+	"main.go/internal/weatherapp/runner/mode"
+	
 )
 
-var _ stage.Runner = (*Runner)(nil)
+var _ mode.Runner = (*Runner)(nil)
 
 type Runner struct {
 	producer        weatherAppProducer.Producer
 	consumer        weatherAppConsumer.Consumer
 	shortCitiesInfo []weatherapp.ShortCityInfo
 	consumerNumber  int
+	producerNumber  int
 }
 
 func NewRunner(
@@ -25,33 +26,54 @@ func NewRunner(
 	consumer weatherAppConsumer.Consumer,
 	shortCitiesInfo []weatherapp.ShortCityInfo,
 	consumerNumber int,
+	producerNumber int,
 ) *Runner {
 	return &Runner{
 		producer:        producer,
 		consumer:        consumer,
 		shortCitiesInfo: shortCitiesInfo,
 		consumerNumber:  consumerNumber,
+		producerNumber:  producerNumber,
 	}
 }
 
 func (r *Runner) Run() error {
-	var wg sync.WaitGroup
+	var consumerWg sync.WaitGroup
+
+	var producerWg sync.WaitGroup
 
 	msgChannel := make(chan weatherapp.WeatherMsg)
+	shortCityInfoChannel := make(chan weatherapp.ShortCityInfo)
 
-	producerRunner := msgProducer.NewRunner(r.producer, msgChannel)
+	producerRunner := msgProducer.NewRunner(
+		r.producer, shortCityInfoChannel, msgChannel,
+	)
+
 	consumerRunner := channelConsumer.NewRunner(r.consumer, msgChannel)
 
-	wg.Add(r.consumerNumber)
+	go func() {
+		for _, cityInfo := range r.shortCitiesInfo {
+			shortCityInfoChannel <- cityInfo
+		}
+
+		close(shortCityInfoChannel)
+	}()
+
+	consumerWg.Add(r.consumerNumber)
 
 	for i := 0; i < r.consumerNumber; i++ {
-		go consumerRunner.Consume(&wg)
+		go consumerRunner.Consume(&consumerWg)
 	}
 
-	wg.Add(1)
+	producerWg.Add(r.producerNumber)
 
-	go producerRunner.Produce(&wg, r.shortCitiesInfo)
-	wg.Wait()
+	for i := 0; i < r.producerNumber; i++ {
+		go producerRunner.Produce(&producerWg)
+	}
+
+	producerWg.Wait()
+	close(msgChannel)
+	consumerWg.Wait()
 
 	return nil
 }

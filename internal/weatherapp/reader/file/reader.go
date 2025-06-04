@@ -34,5 +34,5 @@ func (r Reader) Read(filePath string) ([]weatherapp.CityInfo, error) {
 		return nil, fmt.Errorf("failed to unmarshal file: %w", err)
 	}
 
-	return citiesInfo, fmt.Errorf("failed to read file: %w", err)
+	return citiesInfo, nil
 }

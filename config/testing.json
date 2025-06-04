@@ -6,11 +6,11 @@
   "LogConsumedMsg": true,
   "LogResults": true,
   "AnalysisDurationInMonths": 6,
-  "Stage": "stage5",
+  "Mode": "mode_1",
   "ConsumerNumber": 10,
   "ProducerNumber": 20,
   "MockApi": true,
-  "StageRepeatCount": 2,
+  "ExecutionRepeatCount": 2,
   "PerformanceTest": true,
   "MaxWorkingProducers": 5
 }

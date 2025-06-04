@@ -1,4 +1,4 @@
-package stage
+package execution
 
 import (
 	"testing"
@@ -56,7 +56,7 @@ func Test_calculateStandardDeviation(t *testing.T) {
 	}
 }
 
-func Test_calculateAverageStageDuration(t *testing.T) {
+func Test_calculateAverageExecutionDuration(t *testing.T) {
 	type args struct {
 		durations []time.Duration
 	}
@@ -99,8 +99,8 @@ func Test_calculateAverageStageDuration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := calculateAverageStageDuration(tt.args.durations); got != tt.want {
-				t.Errorf("calculateAverageStageDuration() = %v, want %v", got, tt.want)
+			if got := calculateAverageExecutionDuration(tt.args.durations); got != tt.want {
+				t.Errorf("calculateAverageExecutionDuration() = %v, want %v", got, tt.want)
 			}
 		})
 	}
