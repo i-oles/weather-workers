@@ -8,7 +8,7 @@ import (
 	weatherAppProducer "main.go/internal/weatherapp/producer"
 	channelConsumer "main.go/internal/weatherapp/runner/consumer/channel"
 	"main.go/internal/weatherapp/runner/mode"
-	
+	msgProducer "main.go/internal/weatherapp/runner/producer/msg/fromarray"
 )
 
 var _ mode.Runner = (*Runner)(nil)

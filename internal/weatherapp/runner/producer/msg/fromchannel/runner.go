@@ -1,10 +1,11 @@
 package fromchannel
 
 import (
+	"sync"
+
 	"github.com/sirupsen/logrus"
 	"main.go/internal/weatherapp"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
-	"sync"
 )
 
 type ProducerRunner struct {
