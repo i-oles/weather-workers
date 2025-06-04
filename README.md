@@ -13,6 +13,8 @@ Program wejsciowo dostaje plik `assets/pl172.json` z informacjami o miastach z b
 
 # DEVELOPMENT
 
+TODO
+
 # RUNNING
 
 You can run this app in few modes:  
@@ -33,10 +35,7 @@ open config file `config/dev.json`
 ```
 
 run:  
-`go run cmd/weatherapp/main.go` or `go run -race cmd/weatherapp/main.go`
-
-or using makefile:  
-`make run` or `make run-race`
+`go run cmd/weatherapp/main.go`
 
 program zapisze żądane wyniki w `/assets`   
 
@@ -58,6 +57,10 @@ przykladowy response:
 }
 ```
 # TESTING
+
+### UNIT TESTS:
+run:  
+`go test -v ./...`
 
 ### PERFORMANCE TESTS:
 
@@ -87,19 +90,6 @@ dodatkowo:
 ```
 
 run:  
-`go run cmd/weatherapp/main.go -profile="testing"` or `go run -race cmd/weatherapp/main.go -profile="testing"`  
-
-or using makefile:  
-`make run-performance-test` or `make run-race-performance-test`
+`go run cmd/weatherapp/main.go -profile="testing"`
 
 program zapisze żądane wyniki w `/assets`  
-
-### UNIT TESTS:
-run:  
-`go test -v ./...` or `go test --race -v ./...`  
-
-or using makefile:  
-`make test` or `make test-race`
-
-- datarace consumer? producer? (mode_3,4,5)j
-- w nazwie plikow result i test powinno byc widoczne ile bylo consumerow i producerow
