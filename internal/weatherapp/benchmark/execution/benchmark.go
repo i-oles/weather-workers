@@ -46,14 +46,14 @@ func (b Benchmark) ProcessExecutionPerformanceTest(
 
 		logrus.Debugf("process no. %v, %s duration: %v\n", i+1, b.mode, executionDuration)
 
-		err = b.writer.Write(fmt.Sprintf("%v\n", executionDuration))
+		err = b.writer.Write(fmt.Sprintf("execution_%d: %v\n", i+1, executionDuration))
 		if err != nil {
 			return fmt.Errorf("failed to write execution duration: %w", err)
 		}
 	}
 
 	err := b.writer.Write(
-		fmt.Sprintf("average: %v\n", calculateAverageExecutionDuration(executionDurations)),
+		fmt.Sprintf("average_execution: %v\n", calculateAverageExecutionDuration(executionDurations)),
 	)
 
 	if err != nil {

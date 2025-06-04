@@ -1,6 +1,6 @@
-# ABOUT Weather Workers App
+# ABOUT 
 
-Aplikacja producer-consumer analizująca pogodę z podanego okresu.
+Aplikacja Weather Workers App producer-consumer analizująca pogodę z podanego okresu.
 
 Program na podstawie danych o polskich miastach uderza do api `http://Open-Meteo.com`
 i zapisuje do pliku następujące dane:
@@ -38,7 +38,7 @@ run:
 or using makefile:  
 `make run` or `make run-race`
 
-program zapisze żądane wyniki w `/assets`.  
+program zapisze żądane wyniki w `/assets`   
 
 przykladowy response:
 ```
@@ -57,35 +57,49 @@ przykladowy response:
   }
 }
 ```
-
 # TESTING
 
-### performance tests:
+### PERFORMANCE TESTS:
 
-Ponieważ aplikacja ma różne tryby - możemy odpalić testy performatywne, które zmierzą nam: 
+Ponieważ aplikacja ma różne tryby - możemy odpalić testy performatywne,  
+w których możemy okreslic ile razy chcemy odpalić ten sam proces (aplikację w konkretnym mode).
+Dzięki tym testom możemy sprawdzić wydajnosc poszczególnych modeów.
+Po odpaleniu zostaną zapisane do pliku poszczególne czasy każdej egzekucji, sredni czas egzekucji, a także czas standard deviation.
+Przykładowy zapis:
 
-run-performance-test:
-run-race-performance-test:
-go run cmd/weatherapp/main.go
-go run -race cmd/weatherapp/main.go -profile="testing"
+```
+execution_1: 4.454012416s
+execution_2: 4.447440375s
+execution_3: 4.452014083s
+average_execution: 4.451155624s
+standard_deviation: 2.750835ms
+```
 
-### unittests:
+open config file `config/testing.json`  
+
+specify settings in config (look up RUNNING section)  
+dodatkowo:
+
+```
+  "MockApi": true,                  --> żeby nie przeciążyć API `http://Open-Meteo.com`, mockujemy sredni czas jednego strzału do API
+  "ExecutionRepeatCount": 3,        --> specify how many times you want to execute aplication
+  "PerformanceTest": true,          --> set to true for running performance tests 
+```
+
+run:  
+`go run cmd/weatherapp/main.go -profile="testing"` or `go run -race cmd/weatherapp/main.go -profile="testing"`  
+
+or using makefile:  
+`make run-performance-test` or `make run-race-performance-test`
+
+program zapisze żądane wyniki w `/assets`  
+
+### UNIT TESTS:
 run:  
 `go test -v ./...` or `go test --race -v ./...`  
 
 or using makefile:  
 `make test` or `make test-race`
 
-Rzeczy do poruszenia: współdzielona pamięć (mutex), ograniczenia w strzałach do api (semaphore)
-
-Program powinien być w stanie zliczyć czas swojego działania, żeby móc porównać pod względem wydajności kolejne etapy.
-Wystarczy zwykłe liczenie czasu z biblioteką time
-
-TODO:
-
-- popraw tresc zapisywanych plikow testu benchmarku
 - datarace consumer? producer? (mode_3,4,5)j
-- dodaj flage na odapalnie testow z iloscia powtórzen execution
-- opisz w readme testing -> zwykle odpalenie testow i opisz testy benchmarkowe
 - w nazwie plikow result i test powinno byc widoczne ile bylo consumerow i producerow
-- 
