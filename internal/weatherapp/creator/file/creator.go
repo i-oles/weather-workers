@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	jsonExtension     = ".json"
-	csvExtension      = ".csv"
-	resultFilePrefix  = "results"
-	testingFilePrefix = "testing"
+	extJSON      = ".json"
+	extCSV       = ".csv"
+	prefixResult = "result"
+	prefixTest   = "test"
 )
 
 var _ creator.FileCreator = (*Creator)(nil)
@@ -29,9 +29,22 @@ func NewCreator(cfg configuration.Configuration) *Creator {
 }
 
 func (c *Creator) Create() (*os.File, error) {
-	filePath := c.buildFilePath()
+	fileName := fmt.Sprintf("%s_%s%s", prefixResult, c.cfg.Mode, extJSON)
 
-	if err := c.validateIfFileExists(filePath); err != nil {
+	if c.cfg.PerformanceTest {
+		fileName = fmt.Sprintf("%s_%s__%dtimes_%dproducers_%dconsumers%s",
+			prefixTest,
+			c.cfg.Mode,
+			c.cfg.ExecutionRepeatCount,
+			c.cfg.ProducerNumber,
+			c.cfg.ConsumerNumber,
+			extCSV,
+		)
+	}
+
+	filePath := filepath.Join(c.cfg.FilesDirName, fileName)
+
+	if err := c.ensureFileNotExists(filePath); err != nil {
 		return nil, fmt.Errorf("failed validating file: %w", err)
 	}
 
@@ -43,24 +56,7 @@ func (c *Creator) Create() (*os.File, error) {
 	return file, nil
 }
 
-func (c *Creator) buildFilePath() string {
-	return filepath.Join(c.cfg.FilesDirName, c.buildFileName())
-}
-
-func (c *Creator) buildFileName() string {
-	if c.cfg.PerformanceTest {
-		return fmt.Sprintf("%s_%s_%dtimes%s",
-			testingFilePrefix,
-			c.cfg.Mode,
-			c.cfg.ExecutionRepeatCount,
-			csvExtension,
-		)
-	}
-
-	return fmt.Sprintf("%s_%s%s", resultFilePrefix, c.cfg.Mode, jsonExtension)
-}
-
-func (c *Creator) validateIfFileExists(filePath string) error {
+func (c *Creator) ensureFileNotExists(filePath string) error {
 	_, err := os.Stat(filePath)
 	if !os.IsNotExist(err) {
 		return fmt.Errorf("file %s already exists", filePath)

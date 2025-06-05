@@ -7,10 +7,10 @@
   "LogResults": true,
   "AnalysisDurationInMonths": 6,
   "Mode": "mode_4",
-  "ConsumerNumber": 5,
-  "ProducerNumber": 8,
+  "ConsumerNumber": 10,
+  "ProducerNumber": 14,
   "MockApi": true,
-  "ExecutionRepeatCount": 3,
+  "ExecutionRepeatCount": 2,
   "PerformanceTest": true,
   "MaxWorkingProducers": 5
 }

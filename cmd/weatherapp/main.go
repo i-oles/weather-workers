@@ -12,6 +12,7 @@ import (
 	"main.go/internal/weatherapp"
 	"main.go/internal/weatherapp/aggregator/weather"
 	"main.go/internal/weatherapp/benchmark/execution"
+	"main.go/internal/weatherapp/config"
 	"main.go/internal/weatherapp/configuration"
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	logConsumer "main.go/internal/weatherapp/consumer/log"
@@ -40,7 +41,6 @@ import (
 	"main.go/internal/weatherapp/writer/benchmark"
 	logWriter "main.go/internal/weatherapp/writer/log"
 	"main.go/internal/weatherapp/writer/result"
-	"main.go/pkg/config"
 )
 
 func main() {
