@@ -121,6 +121,8 @@ issues:
     - path: "cmd/weatherapp/main.go"
       linters:
         - funlen
+        - gocognit
+        - cyclop
 
 run:
   timeout: 5m

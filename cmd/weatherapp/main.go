@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -53,14 +52,14 @@ func main() {
 
 	log.Println(cfg.Pretty())
 
-	err = run(context.Background(), cfg)
+	err = run(cfg)
 	if err != nil {
 		slog.Error("error running app", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, cfg configuration.Configuration) error {
+func run(cfg configuration.Configuration) error {
 	var apiOpenMeteo openmeteo.API
 
 	apiOpenMeteo = api.NewOpenMeteo(cfg.APIURL, cfg.AnalysisDurationInMonths)
@@ -107,7 +106,7 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 	citiesInfo, err := reader.Read(sourcePathFile)
 	if err != nil {
 		return fmt.Errorf(
-			"error during reading source file %v: %v", cfg.SourceFileName, err)
+			"error during reading source file %v: %w", cfg.SourceFileName, err)
 	}
 
 	shortCitiesInfo := make([]weatherapp.ShortCityInfo, len(citiesInfo))
@@ -119,7 +118,7 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 
 	resultsFile, err := resultsFileCreator.Create()
 	if err != nil {
-		return fmt.Errorf("error during creating results file: %v", err)
+		return fmt.Errorf("error during creating results file: %w", err)
 	}
 
 	defer resultsFile.Close()
@@ -130,7 +129,7 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
 
 			return nil
@@ -138,14 +137,14 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 
 		err = runner.Run()
 		if err != nil {
-			return fmt.Errorf("error during running %s: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %w", cfg.Mode, err)
 		}
 	case "mode_2":
 		runner := modeTwo.NewRunner(producer, consumer, shortCitiesInfo)
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
 
 			return nil
@@ -153,14 +152,14 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 
 		err = runner.Run()
 		if err != nil {
-			return fmt.Errorf("error during running %s: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %w", cfg.Mode, err)
 		}
 	case "mode_3":
 		runner := modeThree.NewRunner(producer, consumer, shortCitiesInfo, cfg.ConsumerNumber)
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
 
 			return nil
@@ -168,7 +167,7 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 
 		err = runner.Run()
 		if err != nil {
-			return fmt.Errorf("error during running %s: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %w", cfg.Mode, err)
 		}
 	case "mode_4", "mode_5":
 		if cfg.Mode == "mode_5" {
@@ -186,7 +185,7 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
 
 			return nil
@@ -194,10 +193,10 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 
 		err = runner.Run()
 		if err != nil {
-			return fmt.Errorf("error during running %v: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %w", cfg.Mode, err)
 		}
 	default:
-		return fmt.Errorf("Unknown execution: %v", cfg.Mode)
+		return fmt.Errorf("unknown execution: %v", cfg.Mode)
 	}
 
 	results := saver.GetResults()
@@ -211,8 +210,9 @@ func run(ctx context.Context, cfg configuration.Configuration) error {
 
 	err = resultWriter.Write(results)
 	if err != nil {
-		return fmt.Errorf("error during writing the result file: %v", err)
+		return fmt.Errorf("error during writing the result file: %w", err)
 	}
+
 	return nil
 }
 
