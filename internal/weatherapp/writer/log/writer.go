@@ -2,8 +2,8 @@ package log
 
 import (
 	"fmt"
+	"log/slog"
 
-	"github.com/sirupsen/logrus"
 	"main.go/internal/weatherapp"
 	"main.go/internal/weatherapp/writer"
 )
@@ -24,7 +24,7 @@ func (w Writer) Write(result map[string]weatherapp.Result) error {
 		return fmt.Errorf("failed writing result: %w", err)
 	}
 
-	logrus.Infof("Results: %+v", result)
+	slog.Info("result successfully written", slog.Any("result", result))
 
 	return nil
 }

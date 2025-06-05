@@ -2,10 +2,10 @@ package execution
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"main.go/internal/weatherapp/runner/mode"
 	"main.go/internal/weatherapp/writer"
 )
@@ -32,7 +32,10 @@ func (b Benchmark) ProcessExecutionPerformanceTest(
 	executionDurations := make([]time.Duration, times)
 
 	for i := 0; i < times; i++ {
-		logrus.Infof("%d. processing %s...", i+1, b.mode)
+		slog.Info("Processing...",
+			slog.Int("execution_number", i+1),
+			slog.String("mode", b.mode),
+		)
 
 		startTime := time.Now()
 
@@ -44,7 +47,11 @@ func (b Benchmark) ProcessExecutionPerformanceTest(
 		executionDuration := time.Since(startTime)
 		executionDurations[i] = executionDuration
 
-		logrus.Debugf("process no. %v, %s duration: %v\n", i+1, b.mode, executionDuration)
+		slog.Debug("Process execution",
+			slog.Int("execution_number", i+1),
+			slog.String("mode", b.mode),
+			slog.Duration("duration", executionDuration),
+		)
 
 		err = b.writer.Write(fmt.Sprintf("execution_%d: %v\n", i+1, executionDuration))
 		if err != nil {

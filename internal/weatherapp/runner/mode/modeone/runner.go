@@ -1,7 +1,8 @@
 package modeone
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
+
 	"main.go/internal/weatherapp"
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
@@ -32,7 +33,7 @@ func (r *Runner) Run() error {
 	for _, shortCityInfo := range r.shortCitiesInfo {
 		msg, err := r.producer.Produce(shortCityInfo)
 		if err != nil {
-			logrus.Errorf("Error during producing msg: %v", err)
+			slog.Error("error during producing msg", slog.Any("error", err))
 
 			continue
 		}

@@ -1,9 +1,9 @@
 package fromchannel
 
 import (
+	"log/slog"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"main.go/internal/weatherapp"
 	weatherAppProducer "main.go/internal/weatherapp/producer"
 )
@@ -34,7 +34,7 @@ func (p *ProducerRunner) Produce(
 	for shortCityInfo := range p.shortCityInfoChannel {
 		msg, err := p.producer.Produce(shortCityInfo)
 		if err != nil {
-			logrus.Errorf("error during producing msg: %v", err)
+			slog.Error("error during producing msg", slog.Any("error", err))
 
 			continue
 		}

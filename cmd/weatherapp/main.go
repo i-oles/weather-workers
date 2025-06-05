@@ -1,13 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 	"main.go/internal/weatherapp"
 	"main.go/internal/weatherapp/aggregator/weather"
@@ -44,17 +43,23 @@ import (
 )
 
 func main() {
-	startTime := time.Now()
-
 	cfg := configuration.Configuration{}
 
 	err := config.GetConfig("./config", &cfg)
 	if err != nil {
-		logrus.Fatalf("error during getting config: %v", err)
+		slog.Error("error during getting config", slog.Any("error", err))
 	}
 
-	log.Println(cfg.Pretty())
+	slog.Info("loaded config", slog.String("config", cfg.Pretty()))
 
+	err = run(context.Background(), cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error running app: %s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run(ctx context.Context, cfg configuration.Configuration) error {
 	var apiOpenMeteo openmeteo.API
 
 	apiOpenMeteo = api.NewOpenMeteo(cfg.APIURL, cfg.AnalysisDurationInMonths)
@@ -100,7 +105,7 @@ func main() {
 
 	citiesInfo, err := reader.Read(sourcePathFile)
 	if err != nil {
-		logrus.Fatalf(
+		return fmt.Errorf(
 			"error during reading source file %v: %v", cfg.SourceFileName, err)
 	}
 
@@ -113,7 +118,7 @@ func main() {
 
 	resultsFile, err := resultsFileCreator.Create()
 	if err != nil {
-		logrus.Fatalf("error during creating results file: %v", err)
+		return fmt.Errorf("error during creating results file: %v", err)
 	}
 
 	defer resultsFile.Close()
@@ -124,45 +129,45 @@ func main() {
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
-			return
+			return nil
 		}
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running %s: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %v", cfg.Mode, err)
 		}
 	case "mode_2":
 		runner := modeTwo.NewRunner(producer, consumer, shortCitiesInfo)
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
-			return
+			return nil
 		}
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running %s: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %v", cfg.Mode, err)
 		}
 	case "mode_3":
 		runner := modeThree.NewRunner(producer, consumer, shortCitiesInfo, cfg.ConsumerNumber)
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
-			return
+			return nil
 		}
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running %s: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %s: %v", cfg.Mode, err)
 		}
 	case "mode_4", "mode_5":
 		if cfg.Mode == "mode_5" {
@@ -180,18 +185,18 @@ func main() {
 		if cfg.PerformanceTest {
 			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
-				logrus.Fatalf("error performance tests for %s: %v", cfg.Mode, err)
+				return fmt.Errorf("error performance tests for %s: %v", cfg.Mode, err)
 			}
 
-			return
+			return nil
 		}
 
 		err = runner.Run()
 		if err != nil {
-			logrus.Fatalf("error during running %v: %v", cfg.Mode, err)
+			return fmt.Errorf("error during running %v: %v", cfg.Mode, err)
 		}
 	default:
-		logrus.Fatalf("Unknown execution: %v", cfg.Mode)
+		return fmt.Errorf("Unknown execution: %v", cfg.Mode)
 	}
 
 	results := saver.GetResults()
@@ -205,10 +210,9 @@ func main() {
 
 	err = resultWriter.Write(results)
 	if err != nil {
-		logrus.Fatalf("error during writing the result file: %v", err)
+		return fmt.Errorf("error during writing the result file: %v", err)
 	}
-
-	logrus.Infof("Process duration: %v", time.Since(startTime))
+	return nil
 }
 
 func processPerformanceTests(

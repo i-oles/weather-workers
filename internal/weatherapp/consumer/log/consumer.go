@@ -1,7 +1,8 @@
 package log
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
+
 	"main.go/internal/weatherapp"
 	weatherAppConsumer "main.go/internal/weatherapp/consumer"
 )
@@ -19,5 +20,5 @@ func New(consumer weatherAppConsumer.Consumer) *Consumer {
 func (c *Consumer) Consume(msg weatherapp.WeatherMsg) {
 	c.consumer.Consume(msg)
 
-	logrus.Infof("Consumed msg for city: %v", msg.CityName)
+	slog.Info("consumed msg for city", slog.Any("cityName", msg.CityName))
 }
