@@ -31,13 +31,19 @@ func NewCreator(cfg configuration.Configuration) *Creator {
 func (c *Creator) Create() (*os.File, error) {
 	fileName := fmt.Sprintf("%s_%s%s", prefixResult, c.cfg.Mode, extJSON)
 
+	maxWorkingProducers := ""
+	if c.cfg.Mode == "mode_5" {
+		maxWorkingProducers = fmt.Sprintf("_%dmax_working_producers", c.cfg.MaxWorkingProducers)
+	}
+
 	if c.cfg.PerformanceTest {
-		fileName = fmt.Sprintf("%s_%s__%dtimes_%dproducers_%dconsumers%s",
+		fileName = fmt.Sprintf("%s_%s__%dtimes_%dproducers_%dconsumers%s%s",
 			prefixTest,
 			c.cfg.Mode,
 			c.cfg.ExecutionRepeatCount,
 			c.cfg.ProducerNumber,
 			c.cfg.ConsumerNumber,
+			maxWorkingProducers,
 			extCSV,
 		)
 	}
