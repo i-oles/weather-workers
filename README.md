@@ -1,46 +1,62 @@
-# ABOUT 
+# ABOUT
 
-Aplikacja Weather Workers App producer-consumer analizująca pogodę z podanego okresu.
+**Weather Workers App** is a producer-consumer application that analyzes weather data over a specified period of time.
 
-Program na podstawie danych o polskich miastach uderza do api `http://Open-Meteo.com`
-i zapisuje do pliku następujące dane:
+Based on data about Polish cities, the program queries the API `http://Open-Meteo.com` and saves the following results to a file:
 
-1. miasto z największą srednią temperaturą
-2. miasto gdzie najczęściej występuje mgła (weather code 45)
-3. miasto gdzie jest najczęściej czyste niebo (weather code 0)
+- The city with the highest average temperature
+- The city with the most frequent fog
+- The city with the most frequent clear skies
 
-Program wejsciowo dostaje plik `assets/pl172.json` z informacjami o miastach z bazy danych z `http://Simplemaps.com`
+As input, the program uses the file `assets/pl172.json` containing information about Polish cities from the database `http://Simplemaps.com`.
+
+---
 
 # DEVELOPMENT
 
-TODO
+install go:  
+```
+sudo apt install golang-go        →   ubuntu/debian  
+
+brew install go                   →   macOSX  
+```
+
+install packages:  
+
+```
+go mod install
+```
+
+---
 
 # RUNNING
 
-You can run this app in few modes:  
-`mode_1` --> 1 producer, 1 consumer (singe thread)  
-`mode_2` --> 1 producer, 1 consumer (goroutines)  
-`mode_3` --> 1 producer, n consumers  
-`mode_4` --> n producers, n consumers  
-`mode_5` --> n producers, n consumers, but only k producers can work in the same time.
+You can run the app in several modes:
+- `mode_1` → 1 producer, 1 consumer (single thread)
+- `mode_2` → 1 producer, 1 consumer (using goroutines)
+- `mode_3` → 1 producer, multiple consumers
+- `mode_4` → multiple producers, multiple consumers
+- `mode_5` → multiple producers, multiple consumers, but only **k** producers can work concurrently
 
-open config file `config/dev.json`
+Open the config file `config/dev.json` and set the following values:
 
+```json
+"AnalysisDurationInMonths": 6,          // Duration of analysis in months
+"Mode": "mode_2",                       // Mode to run the application
+"ConsumerNumber": 5,                    // Number of consumers (used only in mode_3, mode_4, mode_5)
+"ProducerNumber": 5,                    // Number of producers (used only in mode_4, mode_5)
+"MaxWorkingProducers": 5                // Max number of concurrently working producers (only in mode_5)
 ```
-   "AnalysisDurationInMonths": 6,           --> modify time period for analysis in months
-   "Mode": "mode_2",                        --> specify given mode
-   "ConsumerNumber": 5,                     --> specify number of consumers (modify only if you use mode_3, mode_4, mode_5)
-   "ProducerNumber": 5,                     --> specify number of producers (modify only if you use mode_4, mode_5)
-   "MaxWorkingProducers": 5                 --> specify number of working producers in the same time (only if you use mode_5)
+
+Run the app with:
+```bash
+go run cmd/weatherapp/main.go
 ```
 
-run:  
-`go run cmd/weatherapp/main.go`
+The program will save the results to `/assets`.
 
-program zapisze żądane wyniki w `/assets`   
-
-przykladowy response:
-```
+Example response:
+```json
 {
   "highest_avg_temp": {
     "city_name": "Katowice",
@@ -56,20 +72,26 @@ przykladowy response:
   }
 }
 ```
+
+---
+
 # TESTING
 
-### UNIT TESTS:
-run:  
-`go test -v ./...`
+## UNIT TESTS:
 
-### PERFORMANCE TESTS:
+To run unit tests, use:
+```bash
+go test -v ./...
+```
 
-Ponieważ aplikacja ma różne tryby - możemy odpalić testy performatywne,  
-w których możemy okreslic ile razy chcemy odpalić ten sam proces (aplikację w konkretnym mode).
-Dzięki tym testom możemy sprawdzić wydajnosc poszczególnych modeów.
-Po odpaleniu zostaną zapisane do pliku poszczególne czasy każdej egzekucji, sredni czas egzekucji, a także czas standard deviation.
-Przykładowy zapis:
+## PERFORMANCE TESTS:
 
+To check application performance in various modes, you can run performance tests.  
+You specify how many times the application should be executed in a given mode.  
+After execution, the program will save the execution duration of each run,  
+the average execution time, and the standard deviation to a file.
+
+Example output:
 ```
 execution_1: 4.454012416s
 execution_2: 4.447440375s
@@ -78,18 +100,19 @@ average_execution: 4.451155624s
 standard_deviation: 2.750835ms
 ```
 
-open config file `config/testing.json`  
+Open the config file `config/testing.json` and set the following values  
+(see the RUNNING section for the shared settings).  
+Additionally:
 
-specify settings in config (look up RUNNING section)  
-dodatkowo:
-
+```json
+"MockApi": true,                 // Mocks the API call duration to avoid overloading Open-Meteo API
+"ExecutionRepeatCount": 3,       // Number of times to execute the application
+"PerformanceTest": true          // Enables performance test mode
 ```
-  "MockApi": true,                  --> żeby nie przeciążyć API `http://Open-Meteo.com`, mockujemy sredni czas jednego strzału do API
-  "ExecutionRepeatCount": 3,        --> specify how many times you want to execute aplication
-  "PerformanceTest": true,          --> set to true for running performance tests 
+
+Run with:
+```bash
+go run cmd/weatherapp/main.go -profile="testing"
 ```
 
-run:  
-`go run cmd/weatherapp/main.go -profile="testing"`
-
-program zapisze żądane wyniki w `/assets`  
+The program will save the performance results to `/assets`.
