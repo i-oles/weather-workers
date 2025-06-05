@@ -47,16 +47,16 @@ func (b Benchmark) ProcessExecutionPerformanceTest(
 		executionDuration := time.Since(startTime)
 		executionDurations[i] = executionDuration
 
-		slog.Debug("Process execution",
-			slog.Int("execution_number", i+1),
-			slog.String("mode", b.mode),
-			slog.Duration("duration", executionDuration),
-		)
-
 		err = b.writer.Write(fmt.Sprintf("execution_%d: %v\n", i+1, executionDuration))
 		if err != nil {
 			return fmt.Errorf("failed to write execution duration: %w", err)
 		}
+
+		slog.Info("execution finished:",
+			slog.Int("execution_number", i+1),
+			slog.String("mode", b.mode),
+			slog.Duration("duration", executionDuration),
+		)
 	}
 
 	err := b.writer.Write(
@@ -73,6 +73,8 @@ func (b Benchmark) ProcessExecutionPerformanceTest(
 	if err != nil {
 		return fmt.Errorf("failed to write execution duration: %w", err)
 	}
+
+	slog.Info("performance test done")
 
 	return nil
 }

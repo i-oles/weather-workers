@@ -55,7 +55,7 @@ func main() {
 
 	err = run(context.Background(), cfg)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error running app: %s\n", err)
+		slog.Error("error running app", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
