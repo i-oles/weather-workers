@@ -1,9 +1,10 @@
 package mutexdecorator
 
 import (
+	"sync"
+
 	"main.go/internal/weatherapp"
 	"main.go/internal/weatherapp/presaver"
-	"sync"
 )
 
 type PreSaver struct {

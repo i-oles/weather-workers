@@ -7,7 +7,7 @@
   "LogResults": true,
   "AnalysisDurationInMonths": 6,
   "Mode": "mode_1",
-  "ConsumerNumber": 5,
-  "ProducerNumber": 5,
+  "ConsumerNumber": 4,
+  "ProducerNumber": 15,
   "MaxWorkingProducers": 5
 }
