@@ -6,7 +6,7 @@
   "LogConsumedMsg": true,
   "LogResults": true,
   "AnalysisDurationInMonths": 6,
-  "Mode": "mode_4",
+  "Mode": "mode_5",
   "ConsumerNumber": 5,
   "ProducerNumber": 5,
   "MaxWorkingProducers": 5

@@ -20,5 +20,5 @@ func New(consumer weatherAppConsumer.Consumer) *Consumer {
 func (c *Consumer) Consume(msg weatherapp.WeatherMsg) {
 	c.consumer.Consume(msg)
 
-	slog.Info("consumed msg for city", slog.Any("cityName", msg.CityName))
+	slog.Info("consumed msg:", slog.Any("cityName", msg.CityName))
 }

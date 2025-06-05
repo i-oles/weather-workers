@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -50,7 +51,7 @@ func main() {
 		slog.Error("error during getting config", slog.Any("error", err))
 	}
 
-	slog.Info("loaded config", slog.String("config", cfg.Pretty()))
+	log.Println(cfg.Pretty())
 
 	err = run(context.Background(), cfg)
 	if err != nil {

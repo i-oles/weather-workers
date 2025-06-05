@@ -24,7 +24,7 @@ func (p Producer) Produce(cityInfo weatherapp.ShortCityInfo) (weatherapp.Weather
 		return weatherapp.WeatherMsg{}, fmt.Errorf("failed to produce weather msg: %w", err)
 	}
 
-	slog.Info("produced msg for city", slog.Any("cityName", msg.CityName))
+	slog.Info("produced msg:", slog.Any("cityName", msg.CityName))
 
 	return msg, nil
 }
