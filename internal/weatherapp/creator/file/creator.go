@@ -4,51 +4,65 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"main.go/internal/weatherapp/configuration"
 	"main.go/internal/weatherapp/creator"
 )
 
-const (
-	extJSON      = ".json"
-	extCSV       = ".csv"
-	prefixResult = "result"
-	prefixTest   = "test"
-)
-
 var _ creator.FileCreator = (*Creator)(nil)
 
 type Creator struct {
-	cfg configuration.Configuration
+	cfg    configuration.Configuration
+	ext    string
+	prefix string
 }
 
-func NewCreator(cfg configuration.Configuration) *Creator {
+func NewResultFileCreator(cfg configuration.Configuration) *Creator {
 	return &Creator{
-		cfg: cfg,
+		cfg:    cfg,
+		ext:    ".json",
+		prefix: "result",
+	}
+}
+
+func NewTestFileCreator(cfg configuration.Configuration) *Creator {
+	return &Creator{
+		cfg:    cfg,
+		ext:    ".csv",
+		prefix: "test",
 	}
 }
 
 func (c *Creator) Create() (*os.File, error) {
-	fileName := fmt.Sprintf("%s_%s%s", prefixResult, c.cfg.Mode, extJSON)
+	var filename strings.Builder
 
-	maxWorkingProducers := ""
-	if c.cfg.Mode == "mode_5" {
-		maxWorkingProducers = fmt.Sprintf("_%dmax_working_producers", c.cfg.MaxWorkingProducers)
+	filename.WriteString(c.prefix)
+	filename.WriteString("_")
+	filename.WriteString(c.cfg.Mode)
+	filename.WriteString("_")
+
+	if c.prefix == "test" {
+		filename.WriteString(fmt.Sprintf("_%dtimes", c.cfg.ExecutionRepeatCount))
 	}
 
-	if c.cfg.PerformanceTest {
-		fileName = fmt.Sprintf("%s_%s__%dtimes_%dproducers_%dconsumers%s%s",
-			prefixTest,
-			c.cfg.Mode,
-			c.cfg.ExecutionRepeatCount,
+	switch c.cfg.Mode {
+	case "mode_1", "mode_2":
+		filename.WriteString("_1producer_1consumer")
+	case "mode_3":
+		filename.WriteString(fmt.Sprintf("_1producer_%dconsumer", c.cfg.ConsumerNumber))
+	case "mode_4":
+		filename.WriteString(fmt.Sprintf("_%dproducer_%dconsumer", c.cfg.ProducerNumber, c.cfg.ConsumerNumber))
+	case "mode_5":
+		filename.WriteString(fmt.Sprintf("_%dproducer_%dconsumer_%dmax_working_producers",
 			c.cfg.ProducerNumber,
 			c.cfg.ConsumerNumber,
-			maxWorkingProducers,
-			extCSV,
-		)
+			c.cfg.MaxWorkingProducers))
 	}
 
-	filePath := filepath.Join(c.cfg.FilesDirName, fileName)
+	filename.WriteString(c.ext)
+
+	filePath := filepath.Join(c.cfg.FilesDirName, filename.String())
 
 	if err := c.ensureFileNotExists(filePath); err != nil {
 		return nil, fmt.Errorf("failed validating file: %w", err)

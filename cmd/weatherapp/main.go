@@ -114,20 +114,30 @@ func run(cfg configuration.Configuration) error {
 		shortCitiesInfo[i] = weatherapp.GetShortCityInfo(cityInfo)
 	}
 
-	resultsFileCreator := file.NewCreator(cfg)
+	var f *os.File
 
-	resultsFile, err := resultsFileCreator.Create()
-	if err != nil {
-		return fmt.Errorf("error during creating results file: %w", err)
+	if cfg.PerformanceTest {
+		testFileCreator := file.NewTestFileCreator(cfg)
+		f, err = testFileCreator.Create()
+		if err != nil {
+			return fmt.Errorf("error during creating test file: %w", err)
+		}
+	} else {
+		resultFileCreator := file.NewResultFileCreator(cfg)
+
+		f, err = resultFileCreator.Create()
+		if err != nil {
+			return fmt.Errorf("error creating result file for %s: %w", cfg.Mode, err)
+		}
 	}
 
-	defer resultsFile.Close()
+	defer f.Close()
 
 	switch cfg.Mode {
 	case "mode_1":
 		runner := modeOne.NewRunner(producer, consumer, shortCitiesInfo)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
+			err = processPerformanceTests(runner, f, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
 				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
@@ -142,7 +152,7 @@ func run(cfg configuration.Configuration) error {
 	case "mode_2":
 		runner := modeTwo.NewRunner(producer, consumer, shortCitiesInfo)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
+			err = processPerformanceTests(runner, f, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
 				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
@@ -157,7 +167,7 @@ func run(cfg configuration.Configuration) error {
 	case "mode_3":
 		runner := modeThree.NewRunner(producer, consumer, shortCitiesInfo, cfg.ConsumerNumber)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
+			err = processPerformanceTests(runner, f, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
 				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
@@ -183,7 +193,7 @@ func run(cfg configuration.Configuration) error {
 			cfg.ProducerNumber,
 		)
 		if cfg.PerformanceTest {
-			err = processPerformanceTests(runner, resultsFile, cfg.Mode, cfg.ExecutionRepeatCount)
+			err = processPerformanceTests(runner, f, cfg.Mode, cfg.ExecutionRepeatCount)
 			if err != nil {
 				return fmt.Errorf("error performance tests for %s: %w", cfg.Mode, err)
 			}
@@ -203,7 +213,7 @@ func run(cfg configuration.Configuration) error {
 
 	var resultWriter writer.WeatherAppResultWriter
 
-	resultWriter = result.NewWriter(resultsFile)
+	resultWriter = result.NewWriter(f)
 	if cfg.LogResults {
 		resultWriter = logWriter.New(resultWriter)
 	}
